@@ -1,0 +1,84 @@
+#cloud-config
+
+runcmd:
+  # install packages
+  - dnf install -y epel-release
+  - dnf install -y git zsh curl wget htop gcc gcc-c++ make perl openssl-devel libffi-devel readline-devel zlib-devel bzip2 autoconf automake libtool patch ansible-core
+
+  # add user 
+  - useradd -m -G wheel -s /bin/bash {{ .Username }}
+
+  # give perms to file path
+  - chown -R {{ .Username }}:{{ .Username }} /home/{{ .Username }}
+
+  # dep for forklift
+  - ansible-galaxy collection install community.general theforeman.operations
+
+  # Set hostname
+  - hostnamectl set-hostname foreman-dev.example.com
+  - |
+    cat > /etc/hosts <<EOF
+    127.0.0.1 foreman-dev.example.com foreman-dev localhost localhost.localdomain
+    ::1       foreman-dev.example.com foreman-dev localhost localhost.localdomain
+    EOF
+
+  # Passwordless sudo for {{ .Username }}
+  - echo "{{ .Username }} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/{{ .Username }}
+
+  # Enable EPEL + CRB repos, install libyaml-devel
+  - dnf install -y --enablerepo=crb libyaml-devel
+
+  # Install Node.js 22
+  - dnf module enable nodejs:22 -y
+  - dnf install -y nodejs
+
+  # Install rbenv + Ruby 3.1.6 as {{ .Username }}
+  - |
+    sudo -u {{ .Username }} bash -c '
+    git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+    git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+    echo "export PATH=\"\$HOME/.rbenv/bin:\$PATH\"" >> ~/.bashrc
+    echo "eval \"\$(rbenv init -)\"" >> ~/.bashrc
+    export PATH="$HOME/.rbenv/bin:$PATH"
+    eval "$(rbenv init -)"
+    rbenv install 3.1.6
+    rbenv global 3.1.6
+    '
+
+  # Clone forklift and run katello-devel playbook
+  - |
+    sudo -u {{ .Username }} bash -lc '
+    git clone https://github.com/theforeman/forklift.git ~/forklift
+    cd ~/forklift
+    ansible-playbook -i "localhost," -c local \
+      -e foreman_repositories_environment=staging \
+      -e foreman_repositories_version=nightly \
+      -e katello_repositories_version=nightly \
+      -e foreman_installer_admin_password=changeme \
+      playbooks/katello_devel.yml
+    '
+
+  # Fix installer answers (vagrant -> {{ .Username }}) and re-run
+  - |
+    sed -i 's|/home/vagrant|/home/{{ .Username }}|g; s|user: vagrant|user: {{ .Username }}|g; s|group: vagrant|group: {{ .Username }}|g' /etc/foreman-installer/scenarios.d/katello-devel-answers.yaml
+  - foreman-installer --scenario katello-devel -v --no-colors
+
+write_files:
+  - path: /home/{{ .Username }}/.bashrc.d/custom.sh
+    owner: {{ .Username }}:{{ .Username }}
+    content: |
+      export PATH="$HOME/.rbenv/bin:$PATH"
+      eval "$(rbenv init -)"
+      alias ll="ls -la"
+
+## Recreate machine with:
+# orb delete foreman-dev
+# orb create -a amd64 -c ~/orbstack-foreman.yml rocky:9 foreman-dev
+#
+## Once ready:
+#   ssh {{ .Username }}@foreman-dev@orb
+#   cd ~/foreman && bundle exec foreman start
+##
+## Access: https://foreman-dev.example.com
+## Credentials: admin / changeme
+## Edit on Mac: ~/OrbStack/foreman-dev/home/{{ .Username }}/foreman

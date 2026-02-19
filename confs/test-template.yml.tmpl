@@ -1,0 +1,50 @@
+#cloud-config
+
+runcmd:
+  # install packages
+  - dnf install -y epel-release
+  - dnf install -y git zsh curl wget htop gcc gcc-c++ make perl openssl-devel libffi-devel readline-devel zlib-devel bzip2 autoconf automake libtool patch ansible-core
+
+  # add user 
+  - useradd -m -G wheel -s /bin/bash {{ .Username }}
+
+  # give perms to file path
+  - chown -R {{ .Username }}:{{ .Username }} /home/{{ .Username }}
+
+  # Install Node.js 22
+  - dnf module enable nodejs:22 -y
+  - dnf install -y nodejs
+
+  # Install rbenv + Ruby 3.1.6 as {{ .Username }}
+  - |
+    su - {{ .Username }} -c '
+    git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+    git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+    echo "export PATH=\"\$HOME/.rbenv/bin:\$PATH\"" >> ~/.bashrc
+    echo "eval \"\$(rbenv init -)\"" >> ~/.bashrc
+    export PATH="$HOME/.rbenv/bin:$PATH"
+    eval "$(rbenv init -)"
+    rbenv install 3.1.6
+    rbenv global 3.1.6
+    '
+  # test clone
+  - su - {{ .Username }} -c 'git clone https://github.com/SatelliteQE/airgun.git'
+write_files:
+  - path: /home/{{ .Username }}/.bashrc.d/custom.sh
+    owner: {{ .Username }}:{{ .Username }}
+    content: |
+      export PATH="$HOME/.rbenv/bin:$PATH"
+      eval "$(rbenv init -)"
+      alias ll="ls -la"
+
+## Recreate machine with:
+# orb delete foreman-dev
+# orb create -a amd64 -c ~/orbstack-foreman.yml rocky:9 foreman-dev
+##
+## Once ready:
+#   ssh {{ .Username }}@foreman-dev@orb
+#   cd ~/foreman && bundle exec foreman start
+##
+## Access: https://foreman-dev.example.com
+## Credentials: admin / changeme
+## Edit on Mac: ~/OrbStack/foreman-dev/home/{{ .Username }}/foreman
