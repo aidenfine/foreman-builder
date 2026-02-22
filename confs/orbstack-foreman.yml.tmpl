@@ -11,9 +11,6 @@ runcmd:
   # give perms to file path
   - chown -R {{ .Username }}:{{ .Username }} /home/{{ .Username }}
 
-  # dep for forklift
-  - ansible-galaxy collection install community.general theforeman.operations
-
   # Set hostname
   - hostnamectl set-hostname foreman-dev.example.com
   - |
@@ -33,6 +30,7 @@ runcmd:
   - dnf install -y nodejs
 
   # Install rbenv + Ruby 3.1.6 as {{ .Username }}
+  - echo "installing ruby"
   - |
     sudo -u {{ .Username }} bash -c '
     git clone https://github.com/rbenv/rbenv.git ~/.rbenv
@@ -46,10 +44,12 @@ runcmd:
     '
 
   # Clone forklift and run katello-devel playbook
+  - echo "cloning forklift and running playbook"
   - |
     sudo -u {{ .Username }} bash -lc '
     git clone https://github.com/theforeman/forklift.git ~/forklift
     cd ~/forklift
+    ansible-galaxy collection install community.general theforeman.operations
     ansible-playbook -i "localhost," -c local \
       -e foreman_repositories_environment=staging \
       -e foreman_repositories_version=nightly \
@@ -57,6 +57,10 @@ runcmd:
       -e foreman_installer_admin_password=changeme \
       playbooks/katello_devel.yml
     '
+
+
+  # create env
+  -  touch ~/foreman/.env
 
   # Fix installer answers (vagrant -> {{ .Username }}) and re-run
   - |
