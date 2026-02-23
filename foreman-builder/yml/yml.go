@@ -1,4 +1,4 @@
-package foremanbuilder
+package yml
 
 import (
 	"bytes"

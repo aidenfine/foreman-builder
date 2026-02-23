@@ -1,14 +1,14 @@
-package foremanbuilder_test
+package yml_test
 
 import (
 	"strings"
 	"testing"
 
-	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
+	"github.com/aidenfine/foreman-builder/foreman-builder/yml"
 )
 
 func TestParseConfig(t *testing.T) {
-	yml := `
+	ymlStr := `
 packages:
   - package 0
   - package 1
@@ -16,7 +16,7 @@ packages:
   - package 3
 `
 
-	cfg, err := foremanbuilder.ParseConfig(strings.NewReader(yml))
+	cfg, err := yml.ParseConfig(strings.NewReader(ymlStr))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

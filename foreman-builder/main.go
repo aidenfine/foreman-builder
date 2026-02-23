@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
+	"github.com/aidenfine/foreman-builder/foreman-builder/yml"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -72,12 +72,12 @@ func main() {
 
 	log.Printf("Starting enviornment creation ")
 
-	config, err := foremanbuilder.GetYmlValues("./config.yml")
+	config, err := yml.GetYmlValues("./config.yml")
 	if err != nil {
 		log.Printf("No config file found skipping...")
 	}
 
-	data := foremanbuilder.OrbstackConfigData{
+	data := yml.OrbstackConfigData{
 		Username: username,
 		Packages: config.Packages,
 	}
@@ -86,7 +86,7 @@ func main() {
 
 	pathName := fmt.Sprintf("./confs/orbstack-foreman-%s.yml", data.Username)
 	fmt.Println("using", pathName)
-	err = foremanbuilder.GenerateContainerConfig(data, pathName)
+	err = yml.GenerateContainerConfig(data, pathName)
 	if err != nil {
 		log.Fatal(err)
 	}
