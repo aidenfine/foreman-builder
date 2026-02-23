@@ -1,11 +1,20 @@
 package foremanbuilder
 
 import (
+	"bytes"
 	"io"
+	"log"
 	"os"
+	"text/template"
 
 	"gopkg.in/yaml.v3"
 )
+
+type OrbstackConfigData struct {
+	Username      string
+	Packages      []string
+	InstallString string
+}
 
 type Config struct {
 	Packages []string `yaml:"packages"`
@@ -28,4 +37,34 @@ func GetYmlValues(path string) (Config, error) {
 	defer file.Close()
 
 	return ParseConfig(file)
+}
+
+func GenerateContainerConfig(data OrbstackConfigData, pathName string) error {
+	// tmpl, err := template.ParseFiles("./confs/orbstack-foreman.yml.tmpl")
+	tmpl, err := template.ParseFiles("./confs/orbstack-foreman.yml.tmpl")
+	if err != nil {
+		return err
+	}
+
+	if len(data.Packages) != 0 {
+		installStr := MakeInstallStringFromStruct(data.Packages)
+		log.Printf(installStr, "install str")
+		data.InstallString = installStr
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return err
+	}
+	return os.WriteFile(pathName, buf.Bytes(), 0644)
+}
+
+func MakeInstallStringFromStruct(packages []string) string {
+	var str = ""
+
+	for _, v := range packages {
+		str = str + v + " "
+	}
+	return str
+
 }

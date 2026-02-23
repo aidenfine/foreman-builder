@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -10,8 +9,8 @@ import (
 	"os/user"
 	"runtime"
 	"strings"
-	"text/template"
 
+	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -19,10 +18,6 @@ type opts struct {
 	choices  []string
 	cursor   int
 	selected map[int]struct{}
-}
-
-type OrbstackConfigData struct {
-	Username string
 }
 
 func initialOpts() opts {
@@ -77,15 +72,21 @@ func main() {
 
 	log.Printf("Starting enviornment creation ")
 
-	data := OrbstackConfigData{
+	config, err := foremanbuilder.GetYmlValues("./config.yml")
+	if err != nil {
+		log.Printf("No config file found skipping...")
+	}
+
+	data := foremanbuilder.OrbstackConfigData{
 		Username: username,
+		Packages: config.Packages,
 	}
 
 	// check for errors by doing ssh <container-name>@orb cat /var/log/cloud-init-output.log
 
 	pathName := fmt.Sprintf("./confs/orbstack-foreman-%s.yml", data.Username)
 	fmt.Println("using", pathName)
-	err = generateYAML(data, pathName)
+	err = foremanbuilder.GenerateContainerConfig(data, pathName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,19 +104,4 @@ func main() {
 func isOrbStackRunning() bool {
 	cmd := exec.Command("orbctl", "status")
 	return cmd.Run() == nil
-}
-
-func generateYAML(data OrbstackConfigData, pathName string) error {
-	// tmpl, err := template.ParseFiles("./confs/orbstack-foreman.yml.tmpl")
-	tmpl, err := template.ParseFiles("./confs/orbstack-foreman.yml.tmpl")
-	if err != nil {
-		return err
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return err
-	}
-
-	return os.WriteFile(pathName, buf.Bytes(), 0644)
 }

@@ -5,6 +5,9 @@ runcmd:
   - dnf install -y epel-release
   - dnf install -y git zsh curl wget htop gcc gcc-c++ make perl openssl-devel libffi-devel readline-devel zlib-devel bzip2 autoconf automake libtool patch ansible-core
 
+  # install config packages
+  - dnf install -y {{ .InstallString }}
+
   # add user 
   - useradd -m -G wheel -s /bin/bash {{ .Username }}
 

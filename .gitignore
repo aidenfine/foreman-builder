@@ -29,7 +29,10 @@ go.work.sum
 
 # env file
 .env
-.yaml
+
+#config files
+*.yaml
+*.yml
 
 
 # Editor/IDE

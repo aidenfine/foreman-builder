@@ -1,2 +1,3 @@
 packages:
-  - lazygit
+  - pkg 1 
+  - pkg 2
