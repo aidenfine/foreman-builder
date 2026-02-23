@@ -11,5 +11,5 @@ This tool will help setup a container based foreman dev environment.
 ## Getting started
 First install foreman-builder
 ```bash
-go install github.com/aidenfine/foreman-builder
+go install github.com/aidenfine/foreman-builder@latest
 ```
