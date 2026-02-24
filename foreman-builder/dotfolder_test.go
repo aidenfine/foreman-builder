@@ -1,0 +1,86 @@
+package foremanbuilder_test
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
+)
+
+func TestDoesFileOrDirectoryExist(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Existing file
+	filePath := filepath.Join(tmpDir, "test.txt")
+	err := os.WriteFile(filePath, []byte("hello"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	exists, err := foremanbuilder.DoesFileOrDirectoryExist(filePath)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !exists {
+		t.Fatalf("expected file to exist")
+	}
+
+	missingPath := filepath.Join(tmpDir, "missing.txt")
+	exists, err = foremanbuilder.DoesFileOrDirectoryExist(missingPath)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if exists {
+		t.Fatalf("expected file NOT to exist")
+	}
+}
+func TestAppendToFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "append.txt")
+
+	err := foremanbuilder.AppendToFile(filePath, "line1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	err = foremanbuilder.AppendToFile(filePath, "line2")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := "line1\nline2\n"
+	if string(content) != expected {
+		t.Fatalf("expected %q, got %q", expected, string(content))
+	}
+}
+func TestDeleteLineInFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "delete.txt")
+
+	initial := "apple\nbanana\norange\n"
+	err := os.WriteFile(filePath, []byte(initial), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = foremanbuilder.DeleteLineInFile(filePath, "banana")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := "apple\norange\n"
+	if string(content) != expected {
+		t.Fatalf("expected %q, got %q", expected, string(content))
+	}
+}
