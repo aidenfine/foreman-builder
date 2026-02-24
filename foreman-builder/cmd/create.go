@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"runtime"
+	"path/filepath"
 	"strings"
 
 	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
@@ -37,19 +37,6 @@ var createCmd = &cobra.Command{
 }
 
 func runCreate() {
-	// arm64 = silicon chip
-	// amd64 = non silicon chip
-	userCPU := runtime.GOARCH
-
-	if userCPU != "arm64" {
-		log.Fatal("foreman-builder does not currently support non apple-silicon devices!")
-	}
-
-	if !foremanbuilder.IsOrbStackRunning() {
-		log.Fatalf("Orbstack must be running")
-
-	}
-
 	currentUser, err := user.Current()
 	if err != nil {
 		log.Fatalf("Failed to get current user: %s", err)
@@ -107,4 +94,16 @@ func runCreate() {
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("Error creating container: %s", err)
 	}
+	fmt.Println("Container has been created!")
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Panicf("Failed to get home directory: %v\n", err)
+	}
+
+	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), containerName)
+	if err != nil {
+		log.Println("Failed to write container to container file")
+	}
+
 }
