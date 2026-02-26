@@ -23,5 +23,5 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(listCmd)
-	rootCmd.AddCommand(syncCmd)
+	// rootCmd.AddCommand(syncCmd)
 }
