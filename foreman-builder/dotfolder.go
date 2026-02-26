@@ -59,3 +59,12 @@ func DeleteLineInFile(path, name string) error {
 
 	return os.Rename(tempFile, path)
 }
+
+func GetAllLines(path string) ([]string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(data), "\n"), nil
+
+}

@@ -53,6 +53,7 @@ func main() {
 			log.Panicf("Failed to create container file: %v\n", err)
 		}
 	}
+	cmd.SyncContainers()
 
 	cmd.Execute()
 }
