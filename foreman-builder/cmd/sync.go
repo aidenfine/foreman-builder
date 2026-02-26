@@ -8,21 +8,20 @@ import (
 	"slices"
 
 	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
-	"github.com/spf13/cobra"
 )
 
-var syncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Sync foreman-builder containers with orbstack.",
-	Run: func(cmd *cobra.Command, args []string) {
-		runSync()
-	},
-}
+// var syncCmd = &cobra.Command{
+// 	Use:   "sync",
+// 	Short: "Sync foreman-builder containers with orbstack.",
+// 	Run: func(cmd *cobra.Command, args []string) {
+// 		runSync()
+// 	},
+// }
 
-func runSync() {
-	SyncContainers()
+// func runSync() {
+// 	SyncContainers()
 
-}
+// }
 
 func SyncContainers() {
 	orbContainers, err := foremanbuilder.GetOrbstackContainers()
