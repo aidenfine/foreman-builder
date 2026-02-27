@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -52,18 +51,18 @@ func runCreate() {
 		containerName = "foreman"
 	}
 
-	p := tea.NewProgram(initialOpts())
-	finalOpts, err := p.Run()
-	if err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
-		os.Exit(1)
-	}
-	m := finalOpts.(opts)
+	// p := tea.NewProgram(initialOpts())
+	// finalOpts, err := p.Run()
+	// if err != nil {
+	// 	fmt.Printf("Alas, there's been an error: %v", err)
+	// 	os.Exit(1)
+	// }
+	// m := finalOpts.(opts)
 
 	// currently will not do anything
-	selectedShell := m.choices[m.cursor]
+	// selectedShell := m.choices[m.cursor]
 
-	fmt.Println("Selected Shell", selectedShell)
+	// fmt.Println("Selected Shell", selectedShell)
 
 	log.Printf("Starting enviornment creation ")
 
