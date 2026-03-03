@@ -6,7 +6,7 @@ runcmd:
   - dnf install -y git zsh curl wget htop gcc gcc-c++ make perl openssl-devel libffi-devel readline-devel zlib-devel bzip2 autoconf automake libtool patch ansible-core
 
   # install config packages
-  - dnf install -y {{ .InstallString }}
+  {{ if .InstallString }}- dnf install -y {{ .InstallString }}{{ end }}
 
   # add user 
   - useradd -m -G wheel -s /bin/bash {{ .Username }}
@@ -69,9 +69,6 @@ runcmd:
   - |
     sed -i 's|/home/vagrant|/home/{{ .Username }}|g; s|user: vagrant|user: {{ .Username }}|g; s|group: vagrant|group: {{ .Username }}|g' /etc/foreman-installer/scenarios.d/katello-devel-answers.yaml
   - foreman-installer --scenario katello-devel -v --no-colors
-
-  #source
-  - source ~/.bashrc
 
 write_files:
   - path: /home/{{ .Username }}/.bashrc.d/custom.sh

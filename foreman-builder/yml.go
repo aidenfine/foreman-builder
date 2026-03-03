@@ -2,6 +2,7 @@ package foremanbuilder
 
 import (
 	"bytes"
+	_ "embed"
 	"io"
 	"log"
 	"os"
@@ -9,6 +10,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
+
+//go:embed templates/orbstack-foreman.yml.tmpl
+var containerConfigTmpl string
 
 type OrbstackConfigData struct {
 	Username      string
@@ -40,8 +44,7 @@ func GetYmlValues(path string) (Config, error) {
 }
 
 func GenerateContainerConfig(data OrbstackConfigData, pathName string) error {
-	// tmpl, err := template.ParseFiles("./confs/orbstack-foreman.yml.tmpl")
-	tmpl, err := template.ParseFiles("./confs/orbstack-foreman.yml.tmpl")
+	tmpl, err := template.New("orbstack-foreman").Parse(containerConfigTmpl)
 	if err != nil {
 		return err
 	}
