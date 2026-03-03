@@ -15,13 +15,21 @@ type OrbInstance struct {
 	IP      string `json:"ip"`
 }
 
+type ContainerInfoStruct struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	State string `json:"state"`
+}
+
+var execCommand = exec.Command
+
 func IsOrbStackRunning() bool {
-	cmd := exec.Command("orbctl", "status")
+	cmd := execCommand("orbctl", "status")
 	return cmd.Run() == nil
 }
 
-func GetOrbstackContainers() ([]string, error) {
-	cmd := exec.Command("orbctl", "list", "--format", "json")
+func GetOrbStackContainers() ([]string, error) {
+	cmd := execCommand("orbctl", "list", "--format", "json")
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -39,4 +47,19 @@ func GetOrbstackContainers() ([]string, error) {
 	}
 
 	return names, nil
+}
+
+func ContainerInfo(containerName string) (ContainerInfoStruct, error) {
+	cmd := execCommand("orbctl", "info", containerName, "--format", "json")
+	output, err := cmd.Output()
+	if err != nil {
+		return ContainerInfoStruct{}, err
+	}
+
+	var containerInfo ContainerInfoStruct
+
+	if err := json.Unmarshal(output, &containerInfo); err != nil {
+		return ContainerInfoStruct{}, err
+	}
+	return containerInfo, nil
 }

@@ -28,5 +28,11 @@ Will display a list of containers that `foreman-builder` has created.
 foreman-builder list
 ```
 
+**Delete container**
+Delete a container via name. Note you only be allowed to delete containers created with `foreman-builder`.
+```bash
+foreman-builder delete <container-name>
+```
+
 
 
