@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +16,8 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete container via name.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 || len(args) > 1 {
-			log.Fatalf("Arg Error: Got %d args, when 1 was expected \n", len(args))
+			foremanbuilder.Logger.Errorf("Arg Error: Got %d args, when 1 was expected", len(args))
+			fmt.Printf("Arg Error: Got %d args, when 1 was expected \n", len(args))
 			os.Exit(1)
 		}
 		containerName := args[0]
@@ -31,20 +31,20 @@ func runDelete(containerName string) {
 	// check if item actually exists first AND foreman-builder created it
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Panicf("Failed to get home directory: %v\n", err)
+		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
 	}
 	dotFolderPath := filepath.Join(home, ".foreman-builder")
 	containersPath := filepath.Join(dotFolderPath, "containers")
 	containers, err := foremanbuilder.GetAllLines(containersPath)
 
 	if !slices.Contains(containers, containerName) {
-		log.Fatalf("%s was not created with foreman-builder, foreman-builder will not delete it", containerName)
+		foremanbuilder.Logger.Fatalf("%s was not created with foreman-builder, foreman-builder will not delete it", containerName)
 		os.Exit(1)
 
 	}
 	containerInfo, err := foremanbuilder.ContainerInfo(containerName)
 	if err != nil {
-		log.Fatalf("Failed to get container info %v \n", err)
+		foremanbuilder.Logger.Fatalf("Failed to get container info: %v", err)
 		os.Exit(1)
 	}
 	if containerInfo.State == "running" {

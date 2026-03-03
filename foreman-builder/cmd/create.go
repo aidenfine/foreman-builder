@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -38,7 +37,7 @@ var createCmd = &cobra.Command{
 func runCreate() {
 	currentUser, err := user.Current()
 	if err != nil {
-		log.Fatalf("Failed to get current user: %s", err)
+		foremanbuilder.Logger.Fatalf("Failed to get current user: %s", err)
 	}
 	username := currentUser.Username
 	fmt.Println("Username:", username)
@@ -64,11 +63,11 @@ func runCreate() {
 
 	// fmt.Println("Selected Shell", selectedShell)
 
-	log.Printf("Starting enviornment creation ")
+	foremanbuilder.Logger.Info("Starting environment creation")
 
 	config, err := foremanbuilder.GetYmlValues("./config.yml")
 	if err != nil {
-		log.Printf("No config file found skipping...")
+		foremanbuilder.Logger.Info("No config file found, skipping")
 	}
 
 	data := foremanbuilder.OrbstackConfigData{
@@ -80,19 +79,19 @@ func runCreate() {
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("Failed to get home directory: %v", err)
+		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
 	}
 
 	confsDir := filepath.Join(home, ".foreman-builder", "confs")
 	if err := os.MkdirAll(confsDir, 0755); err != nil {
-		log.Fatalf("Failed to create confs directory: %v", err)
+		foremanbuilder.Logger.Fatalf("Failed to create confs directory: %v", err)
 	}
 
 	pathName := filepath.Join(confsDir, fmt.Sprintf("orbstack-foreman-%s.yml", data.Username))
 	fmt.Println("using", pathName)
 	err = foremanbuilder.GenerateContainerConfig(data, pathName)
 	if err != nil {
-		log.Fatal(err)
+		foremanbuilder.Logger.Fatal(err)
 	}
 
 	// run command to create container
@@ -102,13 +101,13 @@ func runCreate() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("Error creating container: %s", err)
+		foremanbuilder.Logger.Fatalf("Error creating container: %s", err)
 	}
 	fmt.Println("Container has been created!")
 
 	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), containerName)
 	if err != nil {
-		log.Println("Failed to write container to container file")
+		foremanbuilder.Logger.Error("Failed to write container to container file")
 	}
 
 }

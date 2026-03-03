@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -23,7 +22,7 @@ func runList() {
 	fmt.Println("Foreman containers:")
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Panicf("Failed to get home directory: %v\n", err)
+		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
 	}
 	dotFolderPath := filepath.Join(home, ".foreman-builder")
 	containersPath := filepath.Join(dotFolderPath, "containers")

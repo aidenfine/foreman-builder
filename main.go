@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,12 +16,12 @@ func main() {
 	}
 
 	if !foremanbuilder.IsOrbStackRunning() {
-		log.Fatalf("Orbstack must be running")
+		foremanbuilder.Logger.Fatal("Orbstack must be running")
 	}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Panicf("Failed to get home directory: %v\n", err)
+		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
 	}
 
 	dotFolderPath := filepath.Join(home, ".foreman-builder")
@@ -30,27 +29,27 @@ func main() {
 
 	dotfolderExists, err := foremanbuilder.DoesFileOrDirectoryExist(dotFolderPath)
 	if err != nil {
-		log.Printf("Error checking dotfolder: %v\n", err)
+		foremanbuilder.Logger.Errorf("Error checking dotfolder: %v", err)
 	}
 
 	containersExists, err := foremanbuilder.DoesFileOrDirectoryExist(containersPath)
 	if err != nil {
-		log.Printf("Error checking containers file: %v\n", err)
+		foremanbuilder.Logger.Errorf("Error checking containers file: %v", err)
 	}
 
 	if !dotfolderExists {
-		log.Printf("Creating dotfolder...\n")
+		foremanbuilder.Logger.Info("Creating dotfolder...")
 		err := os.MkdirAll(dotFolderPath, 0755)
 		if err != nil {
-			log.Panicf("Failed to create dotfolder: %v\n", err)
+			foremanbuilder.Logger.Fatalf("Failed to create dotfolder: %v", err)
 		}
 	}
 
 	if !containersExists {
-		log.Printf("Creating containers file...\n")
+		foremanbuilder.Logger.Info("Creating containers file...")
 		err := os.WriteFile(containersPath, []byte(""), 0644)
 		if err != nil {
-			log.Panicf("Failed to create container file: %v\n", err)
+			foremanbuilder.Logger.Fatalf("Failed to create container file: %v", err)
 		}
 	}
 	cmd.SyncContainers()
@@ -64,7 +63,7 @@ func isSystemSupported() bool {
 	userCPU := runtime.GOARCH
 
 	if userCPU != "arm64" {
-		log.Fatal("foreman-builder does not currently support non apple-silicon devices!")
+		foremanbuilder.Logger.Fatal("foreman-builder does not currently support non apple-silicon devices!")
 		return false
 	}
 	return true

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"io"
-	"log"
 	"os"
 	"text/template"
 
@@ -51,7 +50,7 @@ func GenerateContainerConfig(data OrbstackConfigData, pathName string) error {
 
 	if len(data.Packages) != 0 {
 		installStr := MakeInstallStringFromStruct(data.Packages)
-		log.Printf(installStr, "install str")
+		Logger.Debugf("install string: %s", installStr)
 		data.InstallString = installStr
 	}
 
