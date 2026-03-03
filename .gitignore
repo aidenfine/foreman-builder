@@ -33,6 +33,7 @@ go.work.sum
 #config files
 *.yaml
 *.yml
+/build
 
 
 # Editor/IDE

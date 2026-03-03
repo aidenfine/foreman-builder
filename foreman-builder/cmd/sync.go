@@ -24,7 +24,7 @@ import (
 // }
 
 func SyncContainers() {
-	orbContainers, err := foremanbuilder.GetOrbstackContainers()
+	orbContainers, err := foremanbuilder.GetOrbStackContainers()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}
