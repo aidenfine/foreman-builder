@@ -67,9 +67,14 @@ runcmd:
     sed -i 's|/home/vagrant|/home/{{ .Username }}|g; s|user: vagrant|user: {{ .Username }}|g; s|group: vagrant|group: {{ .Username }}|g' /etc/foreman-installer/scenarios.d/katello-devel-answers.yaml
   - foreman-installer --scenario katello-devel -v --no-colors
 
+  #rbenv to profile
+  - echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.profile
+  - echo 'eval "$(rbenv init -)"' >> ~/.profiles
+
   #source
   - source ~/.bashrc
-
+  - source ~/.profile
+  
 write_files:
   - path: /home/{{ .Username }}/.bashrc.d/custom.sh
     owner: {{ .Username }}:{{ .Username }}
