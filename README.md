@@ -1,7 +1,6 @@
 # foreman-builder
 
-A mac tool to help build foreman dev env.
-(Currently WIP)
+A mac tool to help build foreman dev env with the goal to it feeling as close to running locally as possible.
 
 This tool will help setup a container based foreman dev environment.
 

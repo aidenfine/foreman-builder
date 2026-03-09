@@ -5,9 +5,6 @@ runcmd:
   - dnf install -y epel-release
   - dnf install -y git zsh curl wget htop gcc gcc-c++ make perl openssl-devel libffi-devel readline-devel zlib-devel bzip2 autoconf automake libtool patch ansible-core
 
-  # install config packages
-  - dnf install -y {{ .InstallString }}
-
   # add user 
   - useradd -m -G wheel -s /bin/bash {{ .Username }}
 
@@ -32,7 +29,7 @@ runcmd:
   - dnf module enable nodejs:22 -y
   - dnf install -y nodejs
 
-  # Install rbenv + Ruby 3.1.6 as {{ .Username }}
+  # Install rbenv + Ruby 3.1.6 
   - echo "installing ruby"
   - |
     sudo -u {{ .Username }} bash -c '
@@ -81,14 +78,3 @@ write_files:
       eval "$(rbenv init -)"
       alias ll="ls -la"
 
-## Recreate machine with:
-# orb delete foreman-dev
-# orb create -a amd64 -c ~/orbstack-foreman.yml rocky:9 foreman-dev
-#
-## Once ready:
-#   ssh {{ .Username }}@foreman-dev@orb
-#   cd ~/foreman && bundle exec foreman start
-##
-## Access: https://foreman-dev.example.com
-## Credentials: admin / changeme
-## Edit on Mac: ~/OrbStack/foreman-dev/home/{{ .Username }}/foreman
