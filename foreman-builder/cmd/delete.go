@@ -48,12 +48,10 @@ func runDelete(containerName string) {
 		os.Exit(1)
 	}
 	if containerInfo.State == "running" {
-		var input string
-		for input != "y" && input != "n" {
-			fmt.Println("Container is currently running! \n Do you want to stop the container and delete? \n [y/n]")
-			fmt.Scanln(&input)
-		}
-		if input == "n" {
+
+		confirmed := foremanbuilder.ConfirmStep(os.Stdin, os.Stdout, "Container is currently running! \n Do you want to stop the container and delete?")
+
+		if !confirmed {
 			os.Exit(1)
 		}
 		// stop container

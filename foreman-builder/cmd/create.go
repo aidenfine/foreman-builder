@@ -50,6 +50,8 @@ func runCreate() {
 		containerName = "foreman"
 	}
 
+	wantsPassword := foremanbuilder.ConfirmStep(os.Stdin, os.Stdout, "Would you like to have an ssh password?")
+
 	// p := tea.NewProgram(initialOpts())
 	// finalOpts, err := p.Run()
 	// if err != nil {
@@ -96,6 +98,9 @@ func runCreate() {
 
 	// run command to create container
 	orbArgs := []string{"create", "-a", "amd64", "-c", pathName, "rocky:9", containerName}
+	if wantsPassword {
+		orbArgs = append(orbArgs, "--set-password")
+	}
 	fmt.Println("running: orb", strings.Join(orbArgs, " "))
 	cmd := exec.Command("orb", orbArgs...)
 	cmd.Stdout = os.Stdout
