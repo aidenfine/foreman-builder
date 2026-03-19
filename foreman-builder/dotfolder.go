@@ -59,12 +59,23 @@ func DeleteLineInFile(path, name string) error {
 
 	return os.Rename(tempFile, path)
 }
-
-func GetAllLines(path string) ([]string, error) {
+func GetAllLines(path string, splitBy string) ([]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(data), "\n"), nil
 
+	lines := strings.Split(string(data), "\n")
+
+	if splitBy == "" {
+		return lines, nil
+	}
+
+	var splitLines []string
+	for _, line := range lines {
+		parts := strings.SplitN(line, splitBy, 2)
+		splitLines = append(splitLines, parts[0])
+	}
+
+	return splitLines, nil
 }

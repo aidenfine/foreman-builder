@@ -105,7 +105,9 @@ func runCreate() {
 	}
 	fmt.Println("Container has been created!")
 
-	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), containerName)
+	var containerType = "orb"
+
+	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), fmt.Sprintf("%s-%s", containerName, containerType))
 	if err != nil {
 		foremanbuilder.Logger.Error("Failed to write container to container file")
 	}

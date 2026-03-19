@@ -84,3 +84,35 @@ func TestDeleteLineInFile(t *testing.T) {
 		t.Fatalf("expected %q, got %q", expected, string(content))
 	}
 }
+
+func TestGetAllLinesInFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "delete.txt")
+	lines := "container1-orb\ncontainer2-lima\ncontainer3-3182321ujd12"
+	err := os.WriteFile(filePath, []byte(lines), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// test no split
+	noSplit, err := foremanbuilder.GetAllLines(filePath, "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(noSplit) != 3 {
+		t.Errorf("Expected 3 got %d", len(noSplit))
+	}
+	if noSplit[0] != "container1-orb" {
+		t.Errorf("Expected container1-orb got %s", noSplit[0])
+	}
+
+	split, err := foremanbuilder.GetAllLines(filePath, "-")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(split) != 3 {
+		t.Errorf("Expected 3 got %d", len(split))
+	}
+	if split[0] != "container1" {
+		t.Errorf("Expected container1-orb got %s", split[0])
+	}
+}

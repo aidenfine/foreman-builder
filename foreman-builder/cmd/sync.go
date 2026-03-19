@@ -34,7 +34,7 @@ func SyncContainers() {
 	}
 	dotFolderPath := filepath.Join(home, ".foreman-builder")
 	containersPath := filepath.Join(dotFolderPath, "containers")
-	foremanContainers, err := foremanbuilder.GetAllLines(containersPath)
+	foremanContainers, err := foremanbuilder.GetAllLines(containersPath, "-")
 	if err != nil {
 		fmt.Printf("Error getting all containers %v\n", err)
 		foremanbuilder.Logger.Errorf("Error has occurred getting all containers %v\n", err)
