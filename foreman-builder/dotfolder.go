@@ -2,6 +2,7 @@ package foremanbuilder
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -78,4 +79,27 @@ func GetAllLines(path string, splitBy string) ([]string, error) {
 	}
 
 	return splitLines, nil
+}
+
+// Can also be used to check if line exists in file, due to return error "not found" if line does not exist
+// using containerType == "" will just check for the containerName itself and not care what `-<container-type>`
+// example: We want to find a container named container1
+func GetLineInFile(path, line, containerType string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	lines := strings.Split(string(data), "\n")
+	// if containerType == "" we can just ignore container postfix
+	for _, line := range lines {
+		containerPrefix := strings.SplitN(line, "::", 2)
+		containerMatch := fmt.Sprintf("%s-%s", line, containerType)
+		if containerType != "" && containerMatch == line {
+			return line, nil
+		}
+		if containerPrefix[0] == strings.SplitN(line, "::", 2)[0] {
+			return line, nil
+		}
+	}
+	return "", errors.New("not_found")
 }

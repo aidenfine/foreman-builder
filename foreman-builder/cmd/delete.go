@@ -35,7 +35,7 @@ func runDelete(containerName string) {
 	}
 	dotFolderPath := filepath.Join(home, ".foreman-builder")
 	containersPath := filepath.Join(dotFolderPath, "containers")
-	containers, err := foremanbuilder.GetAllLines(containersPath, "-")
+	containers, err := foremanbuilder.GetAllLines(containersPath, "::")
 
 	if !slices.Contains(containers, containerName) {
 		foremanbuilder.Logger.Fatalf("%s was not created with foreman-builder, foreman-builder will not delete it", containerName)

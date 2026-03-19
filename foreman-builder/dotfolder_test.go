@@ -1,6 +1,7 @@
 package foremanbuilder_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -88,7 +89,7 @@ func TestDeleteLineInFile(t *testing.T) {
 func TestGetAllLinesInFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "delete.txt")
-	lines := "container1-orb\ncontainer2-lima\ncontainer3-3182321ujd12"
+	lines := "container-1::orb\ncontainer2::lima\ncontainer-1-3::3182321ujd12"
 	err := os.WriteFile(filePath, []byte(lines), 0644)
 	if err != nil {
 		t.Fatal(err)
@@ -101,18 +102,23 @@ func TestGetAllLinesInFile(t *testing.T) {
 	if len(noSplit) != 3 {
 		t.Errorf("Expected 3 got %d", len(noSplit))
 	}
-	if noSplit[0] != "container1-orb" {
+	if noSplit[0] != "container-1::orb" {
 		t.Errorf("Expected container1-orb got %s", noSplit[0])
 	}
 
-	split, err := foremanbuilder.GetAllLines(filePath, "-")
+	split, err := foremanbuilder.GetAllLines(filePath, "::")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if len(split) != 3 {
 		t.Errorf("Expected 3 got %d", len(split))
 	}
-	if split[0] != "container1" {
+	fmt.Printf("string 1: %s", split[0])
+	if split[0] != "container-1" {
 		t.Errorf("Expected container1-orb got %s", split[0])
 	}
+	if split[2] != "container-1-3" {
+		t.Errorf("Expected container-1-3 got %s", split[2])
+	}
+
 }

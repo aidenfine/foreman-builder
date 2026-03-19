@@ -26,7 +26,7 @@ func runList() {
 	}
 	dotFolderPath := filepath.Join(home, ".foreman-builder")
 	containersPath := filepath.Join(dotFolderPath, "containers")
-	containers, err := foremanbuilder.GetAllLines(containersPath, "-")
+	containers, err := foremanbuilder.GetAllLines(containersPath, "::")
 	if err != nil {
 		fmt.Printf("Error getting all containers %v\n", err)
 	}
