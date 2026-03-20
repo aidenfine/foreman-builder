@@ -2,6 +2,7 @@ package foremanbuilder
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 )
 
@@ -19,6 +20,11 @@ type ContainerInfoStruct struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	State string `json:"state"`
+}
+
+type OrbOptions struct {
+	ContainerName string `json:"containerName"`
+	Username      string `json:"username"`
 }
 
 var execCommand = exec.Command
@@ -53,6 +59,9 @@ func ContainerInfo(containerName string) (ContainerInfoStruct, error) {
 	cmd := execCommand("orbctl", "info", containerName, "--format", "json")
 	output, err := cmd.Output()
 	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return ContainerInfoStruct{}, fmt.Errorf("%s", exitErr.Stderr)
+		}
 		return ContainerInfoStruct{}, err
 	}
 
