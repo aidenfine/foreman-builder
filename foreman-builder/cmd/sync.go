@@ -43,6 +43,7 @@ func SyncContainers() {
 	for i := 0; i < len(foremanContainers)-1; i++ {
 		if !slices.Contains(orbContainers, foremanContainers[i]) {
 			// mark for deletion
+			foremanbuilder.Logger.Debugf("During sync... deleting %s\n", foremanContainers[i])
 			err = foremanbuilder.DeleteLineInFile(containersPath, foremanContainers[i])
 			if err != nil {
 				fmt.Printf("Error deleting container from dotfile %v \n", err)

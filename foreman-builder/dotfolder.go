@@ -46,7 +46,7 @@ func DeleteLineInFile(path, name string) error {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		if line != name {
+		if strings.Split(line, "::")[0] != name {
 			kept = append(kept, line)
 		}
 	}
@@ -60,7 +60,7 @@ func DeleteLineInFile(path, name string) error {
 
 	return os.Rename(tempFile, path)
 }
-func GetAllLines(path string, splitBy string) ([]string, error) {
+func GetAllLines(path, splitBy string) ([]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -89,16 +89,25 @@ func GetLineInFile(path, line, containerType string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	lines := strings.Split(string(data), "\n")
+	var lines []string
+	for s := range strings.SplitSeq(string(data), "\n") {
+		lines = append(lines, s)
+	}
 	// if containerType == "" we can just ignore container postfix
-	for _, line := range lines {
-		containerPrefix := strings.SplitN(line, "::", 2)
-		containerMatch := fmt.Sprintf("%s-%s", line, containerType)
-		if containerType != "" && containerMatch == line {
-			return line, nil
+	for _, fileLine := range lines {
+		if strings.TrimSpace(fileLine) == "" {
+			continue
 		}
-		if containerPrefix[0] == strings.SplitN(line, "::", 2)[0] {
-			return line, nil
+		filePrefix := strings.SplitN(fileLine, "::", 2)[0]
+		searchPrefix := strings.SplitN(line, "::", 2)[0]
+		if containerType != "" {
+			containerMatch := fmt.Sprintf("%s::%s", searchPrefix, containerType)
+			if containerMatch == fileLine {
+				return fileLine, nil
+			}
+		}
+		if filePrefix == searchPrefix {
+			return fileLine, nil
 		}
 	}
 	return "", errors.New("not_found")
