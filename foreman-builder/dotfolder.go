@@ -2,6 +2,7 @@ package foremanbuilder
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -45,7 +46,7 @@ func DeleteLineInFile(path, name string) error {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		if line != name {
+		if strings.Split(line, "::")[0] != name {
 			kept = append(kept, line)
 		}
 	}
@@ -59,12 +60,55 @@ func DeleteLineInFile(path, name string) error {
 
 	return os.Rename(tempFile, path)
 }
-
-func GetAllLines(path string) ([]string, error) {
+func GetAllLines(path, splitBy string) ([]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(data), "\n"), nil
 
+	lines := strings.Split(string(data), "\n")
+
+	if splitBy == "" {
+		return lines, nil
+	}
+
+	var splitLines []string
+	for _, line := range lines {
+		parts := strings.SplitN(line, splitBy, 2)
+		splitLines = append(splitLines, parts[0])
+	}
+
+	return splitLines, nil
+}
+
+// Can also be used to check if line exists in file, due to return error "not found" if line does not exist
+// using containerType == "" will just check for the containerName itself and not care what `-<container-type>`
+// example: We want to find a container named container1
+func GetLineInFile(path, line, containerType string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	var lines []string
+	for s := range strings.SplitSeq(string(data), "\n") {
+		lines = append(lines, s)
+	}
+	// if containerType == "" we can just ignore container postfix
+	for _, fileLine := range lines {
+		if strings.TrimSpace(fileLine) == "" {
+			continue
+		}
+		filePrefix := strings.SplitN(fileLine, "::", 2)[0]
+		searchPrefix := strings.SplitN(line, "::", 2)[0]
+		if containerType != "" {
+			containerMatch := fmt.Sprintf("%s::%s", searchPrefix, containerType)
+			if containerMatch == fileLine {
+				return fileLine, nil
+			}
+		}
+		if filePrefix == searchPrefix {
+			return fileLine, nil
+		}
+	}
+	return "", errors.New("not_found")
 }

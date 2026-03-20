@@ -13,19 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type opts struct {
-	choices  []string
-	cursor   int
-	selected map[int]struct{}
-}
-
-func initialOpts() opts {
-	return opts{
-		choices:  []string{"bash", "zsh"},
-		selected: make(map[int]struct{}),
-	}
-}
-
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new container environment",
@@ -33,6 +20,8 @@ var createCmd = &cobra.Command{
 		runCreate()
 	},
 }
+
+var containerType = "orb"
 
 func runCreate() {
 	currentUser, err := user.Current()
@@ -50,64 +39,90 @@ func runCreate() {
 		containerName = "foreman"
 	}
 
-	// p := tea.NewProgram(initialOpts())
-	// finalOpts, err := p.Run()
-	// if err != nil {
-	// 	fmt.Printf("Alas, there's been an error: %v", err)
-	// 	os.Exit(1)
-	// }
-	// m := finalOpts.(opts)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
+	}
 
-	// currently will not do anything
-	// selectedShell := m.choices[m.cursor]
+	containerNameExists, err := foremanbuilder.GetLineInFile(filepath.Join(home, ".foreman-builder/containers"), containerName, "")
+	if err != nil {
+		if err.Error() != "not_found" {
+			fmt.Println("An Error has occured searching dotfile")
+			os.Exit(1)
+		}
+	}
+	foremanbuilder.Logger.Debug("container name: %s \n", containerName)
+	foremanbuilder.Logger.Debug("container name EXISTS: %s \n", containerNameExists)
+	if containerNameExists != "" {
+		fmt.Println("Container name must be unique")
+		os.Exit(1)
+	}
 
-	// fmt.Println("Selected Shell", selectedShell)
+	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), fmt.Sprintf("%s::%s", containerName, containerType))
+	if err != nil {
+		foremanbuilder.Logger.Error("Failed to write container to container file")
+	}
 
 	foremanbuilder.Logger.Info("Starting environment creation")
 
+	if containerType == "orb" {
+		orbOpts := foremanbuilder.OrbOptions{
+			Username:      username,
+			ContainerName: containerName,
+		}
+		err := createOrbstackContainer(orbOpts)
+		if err != nil {
+			// better error message to show?
+			fmt.Println("An error has occured during container creation")
+			os.Exit(1)
+		}
+	}
+
+}
+
+func createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 	config, err := foremanbuilder.GetYmlValues("./config.yml")
 	if err != nil {
 		foremanbuilder.Logger.Info("No config file found, skipping")
 	}
 
 	data := foremanbuilder.OrbstackConfigData{
-		Username: username,
+		Username: opts.Username,
 		Packages: config.Packages,
 	}
 
 	// check for errors by doing ssh <container-name>@orb cat /var/log/cloud-init-output.log
-
 	home, err := os.UserHomeDir()
 	if err != nil {
-		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
+		foremanbuilder.Logger.Errorf("Failed to get home directory: %v", err)
+		return err
 	}
-
 	confsDir := filepath.Join(home, ".foreman-builder", "confs")
 	if err := os.MkdirAll(confsDir, 0755); err != nil {
-		foremanbuilder.Logger.Fatalf("Failed to create confs directory: %v", err)
+		foremanbuilder.Logger.Errorf("Failed to create confs directory: %v", err)
+		return err
 	}
 
 	pathName := filepath.Join(confsDir, fmt.Sprintf("orbstack-foreman-%s.yml", data.Username))
-	fmt.Println("using", pathName)
+	foremanbuilder.Logger.Info("using", pathName)
 	err = foremanbuilder.GenerateContainerConfig(data, pathName)
 	if err != nil {
-		foremanbuilder.Logger.Fatal(err)
+		foremanbuilder.Logger.Errorf("failed to generate container config, err : %v\n", err)
+		return err
 	}
 
 	// run command to create container
-	orbArgs := []string{"create", "-a", "amd64", "-c", pathName, "rocky:9", containerName}
-	fmt.Println("running: orb", strings.Join(orbArgs, " "))
+	orbArgs := []string{"create", "-a", "amd64", "-c", pathName, "rocky:9", opts.ContainerName}
+	foremanbuilder.Logger.Info("running: orb", strings.Join(orbArgs, " "))
 	cmd := exec.Command("orb", orbArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		foremanbuilder.Logger.Fatalf("Error creating container: %s", err)
+		foremanbuilder.Logger.Errorf("Error creating container: %s", err)
+		return err
 	}
 	fmt.Println("Container has been created!")
 
-	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), containerName)
-	if err != nil {
-		foremanbuilder.Logger.Error("Failed to write container to container file")
-	}
+	return nil
 
 }
