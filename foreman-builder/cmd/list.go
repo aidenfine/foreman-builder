@@ -2,9 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-
 	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
 	"github.com/spf13/cobra"
 )
@@ -14,18 +11,13 @@ var listCmd = &cobra.Command{
 	Short: "List all containers created with foreman-builder.",
 	Long:  "List all containers created with foreman-builder.",
 	Run: func(cmd *cobra.Command, args []string) {
-		runList()
+		foremanUser.runList()
 	},
 }
 
-func runList() {
+func(u User) runList() {
 	fmt.Println("Foreman containers:")
-	home, err := os.UserHomeDir()
-	if err != nil {
-		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
-	}
-	dotFolderPath := filepath.Join(home, ".foreman-builder")
-	containersPath := filepath.Join(dotFolderPath, "containers")
+	containersPath := u.containersPath
 	containers, err := foremanbuilder.GetAllLines(containersPath, "::")
 	if err != nil {
 		fmt.Printf("Error getting all containers %v\n", err)
