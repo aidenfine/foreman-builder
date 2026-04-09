@@ -17,13 +17,13 @@ var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new container environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		runCreate()
+		foremanUser.runCreate()
 	},
 }
 
 var containerType = "orb"
 
-func runCreate() {
+func (u User) runCreate() {
 	currentUser, err := user.Current()
 	if err != nil {
 		foremanbuilder.Logger.Fatalf("Failed to get current user: %s", err)
@@ -39,12 +39,7 @@ func runCreate() {
 		containerName = "foreman"
 	}
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
-	}
-
-	containerNameExists, err := foremanbuilder.GetLineInFile(filepath.Join(home, ".foreman-builder/containers"), containerName, "")
+	containerNameExists, err := foremanbuilder.GetLineInFile(u.containersPath, containerName, "")
 	if err != nil {
 		if err.Error() != "not_found" {
 			fmt.Println("An Error has occured searching dotfile")
@@ -58,7 +53,7 @@ func runCreate() {
 		os.Exit(1)
 	}
 
-	err = foremanbuilder.AppendToFile(filepath.Join(home, ".foreman-builder/containers"), fmt.Sprintf("%s::%s", containerName, containerType))
+	err = foremanbuilder.AppendToFile(u.containersPath, fmt.Sprintf("%s::%s", containerName, containerType))
 	if err != nil {
 		foremanbuilder.Logger.Error("Failed to write container to container file")
 	}
@@ -70,7 +65,7 @@ func runCreate() {
 			Username:      username,
 			ContainerName: containerName,
 		}
-		err := createOrbstackContainer(orbOpts)
+		err := foremanUser.createOrbstackContainer(orbOpts)
 		if err != nil {
 			// better error message to show?
 			fmt.Println("An error has occured during container creation")
@@ -80,7 +75,7 @@ func runCreate() {
 
 }
 
-func createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
+func (u User) createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 	config, err := foremanbuilder.GetYmlValues("./config.yml")
 	if err != nil {
 		foremanbuilder.Logger.Info("No config file found, skipping")
@@ -92,12 +87,11 @@ func createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 	}
 
 	// check for errors by doing ssh <container-name>@orb cat /var/log/cloud-init-output.log
-	home, err := os.UserHomeDir()
 	if err != nil {
 		foremanbuilder.Logger.Errorf("Failed to get home directory: %v", err)
 		return err
 	}
-	confsDir := filepath.Join(home, ".foreman-builder", "confs")
+	confsDir := filepath.Join(u.dotFilePath, "confs")
 	if err := os.MkdirAll(confsDir, 0755); err != nil {
 		foremanbuilder.Logger.Errorf("Failed to create confs directory: %v", err)
 		return err

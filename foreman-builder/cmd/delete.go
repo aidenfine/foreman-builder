@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"slices"
 	"strings"
 
@@ -22,20 +21,15 @@ var deleteCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		containerName := args[0]
-		runDelete(fmt.Sprint(strings.Split(containerName, "::")[0]))
+		foremanUser.runDelete(fmt.Sprint(strings.Split(containerName, "::")[0]))
 
 	},
 }
 
-func runDelete(containerName string) {
+func (u User) runDelete(containerName string) {
 
 	// check if item actually exists first AND foreman-builder created it
-	home, err := os.UserHomeDir()
-	if err != nil {
-		foremanbuilder.Logger.Fatalf("Failed to get home directory: %v", err)
-	}
-	dotFolderPath := filepath.Join(home, ".foreman-builder")
-	containersPath := filepath.Join(dotFolderPath, "containers")
+	containersPath := u.containersPath
 	containers, err := foremanbuilder.GetAllLines(containersPath, "::")
 	foremanbuilder.Logger.Debugf("containers: %v\n", containers)
 	foremanbuilder.Logger.Debugf("containerName: %s \n", containerName)
