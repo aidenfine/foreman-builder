@@ -86,11 +86,6 @@ func (u User) createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 		Packages: config.Packages,
 	}
 
-	// check for errors by doing ssh <container-name>@orb cat /var/log/cloud-init-output.log
-	if err != nil {
-		foremanbuilder.Logger.Errorf("Failed to get home directory: %v", err)
-		return err
-	}
 	confsDir := filepath.Join(u.dotFilePath, "confs")
 	if err := os.MkdirAll(confsDir, 0755); err != nil {
 		foremanbuilder.Logger.Errorf("Failed to create confs directory: %v", err)
