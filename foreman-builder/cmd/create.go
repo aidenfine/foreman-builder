@@ -137,7 +137,7 @@ func (u User) createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 func(u User) createOrbstackContainerFromPreBuilt(opts foremanbuilder.OrbOptions) error {
 	// download image hide ip later
 	tarPath := filepath.Join(u.dotFilePath, tarFile)
-	imageURL := fmt.Sprintf("http://URL/images/%s", tarFile)
+	imageURL := fmt.Sprintf("https://checkpoint-distributed-production.up.railway.app/images/%s", tarFile)
 	foremanbuilder.Logger.Info("Downloading image from %s", imageURL)
 
 	curlCmd := exec.Command("curl", "--progress-bar", "-o", tarPath, imageURL)
