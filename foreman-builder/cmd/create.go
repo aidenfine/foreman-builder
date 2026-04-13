@@ -13,15 +13,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var fresh bool
+var containerType = "orb"
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new container environment",
 	Run: func(cmd *cobra.Command, args []string) {
+
+
 		foremanUser.runCreate()
 	},
 }
 
-var containerType = "orb"
+func init(){
+	createCmd.Flags().BoolVar(&fresh, "fresh", false, "Use a fresh install not a prebuilt image.")
+}
 
 func (u User) runCreate() {
 	currentUser, err := user.Current()
@@ -64,6 +70,7 @@ func (u User) runCreate() {
 		orbOpts := foremanbuilder.OrbOptions{
 			Username:      username,
 			ContainerName: containerName,
+			Fresh: fresh,
 		}
 		err := foremanUser.createOrbstackContainer(orbOpts)
 		if err != nil {
@@ -114,4 +121,20 @@ func (u User) createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 
 	return nil
 
+}
+
+// pull down container
+
+func(u User) createOrbstackContainerFromPreBuilt(opts foremanbuilder.OrbOptions) error {
+	// We do not use config.yml on pre built images as of now.
+	orbArgs := []string{"-import", "-n", opts.ContainerName, "#tar.zst path here"}
+	cmd := exec.Command("orb", orbArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		foremanbuilder.Logger.Errorf("Error importing container: %s,", err)
+		return err
+	}
+	fmt.Println("Container has been created!")
+	return nil
 }

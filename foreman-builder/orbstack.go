@@ -25,6 +25,7 @@ type ContainerInfoStruct struct {
 type OrbOptions struct {
 	ContainerName string `json:"containerName"`
 	Username      string `json:"username"`
+	Fresh  bool
 }
 
 var execCommand = exec.Command

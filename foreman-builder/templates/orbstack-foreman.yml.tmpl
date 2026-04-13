@@ -8,7 +8,7 @@ runcmd:
   # install config packages
   {{ if .InstallString }}- dnf install -y {{ .InstallString }}{{ end }}
 
-  # add user 
+  # add user
   - useradd -m -G wheel -s /bin/bash {{ .Username }}
 
   # give perms to file path
