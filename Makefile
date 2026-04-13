@@ -4,7 +4,8 @@ build:
 	go build -o ./build/
 
 clean:
-    go clean -testcache
+	go clean -testcache
+
 test:
 	go test ./...
 

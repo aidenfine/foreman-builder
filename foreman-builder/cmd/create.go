@@ -15,12 +15,11 @@ import (
 
 var fresh bool
 var containerType = "orb"
+var tarFile = "foreman-base.tar.zst"
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new container environment",
 	Run: func(cmd *cobra.Command, args []string) {
-
-
 		foremanUser.runCreate()
 	},
 }
@@ -72,12 +71,22 @@ func (u User) runCreate() {
 			ContainerName: containerName,
 			Fresh: fresh,
 		}
-		err := foremanUser.createOrbstackContainer(orbOpts)
-		if err != nil {
-			// better error message to show?
-			fmt.Println("An error has occured during container creation")
-			os.Exit(1)
+		if fresh {
+			err := foremanUser.createOrbstackContainer(orbOpts)
+			if err != nil {
+				// better error message to show?
+				fmt.Println("An error has occured during container creation")
+				os.Exit(1)
+			}
+		} else {
+			err := foremanUser.createOrbstackContainerFromPreBuilt(orbOpts)
+			if err != nil {
+				// attempt to build from fresh maybe?
+				foremanbuilder.Logger.Info("Failed to build from prebuilt %v", err)
+				os.Exit(1)
+			}
 		}
+
 	}
 
 }
@@ -126,15 +135,31 @@ func (u User) createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 // pull down container
 
 func(u User) createOrbstackContainerFromPreBuilt(opts foremanbuilder.OrbOptions) error {
+	// download image hide ip later
+	tarPath := filepath.Join(u.dotFilePath, tarFile)
+	imageURL := fmt.Sprintf("http://URL/images/%s", tarFile)
+	foremanbuilder.Logger.Info("Downloading image from %s", imageURL)
+
+	curlCmd := exec.Command("curl", "--progress-bar", "-o", tarPath, imageURL)
+	curlCmd.Stdout = os.Stdout
+	curlCmd.Stderr = os.Stderr
+	if err := curlCmd.Run(); err != nil {
+		foremanbuilder.Logger.Errorf("Failed to download image: %s", err)
+		return err
+	}
+
 	// We do not use config.yml on pre built images as of now.
-	orbArgs := []string{"-import", "-n", opts.ContainerName, "#tar.zst path here"}
+	orbArgs := []string{"import", "-n", opts.ContainerName, tarPath}
 	cmd := exec.Command("orb", orbArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		foremanbuilder.Logger.Errorf("Error importing container: %s,", err)
+		foremanbuilder.Logger.Errorf("Error importing container: %s", err)
+		os.Remove(tarPath)
 		return err
 	}
 	fmt.Println("Container has been created!")
+
+	os.Remove(tarPath)
 	return nil
 }
