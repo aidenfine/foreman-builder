@@ -27,6 +27,7 @@ profile.cov
 # Go workspace file
 go.work
 go.work.sum
+*.tar.zst
 
 # env file
 .env
@@ -35,11 +36,12 @@ go.work.sum
 *.yaml
 *.yml
 /build
+/foreman-builder/.local
 
 
 # Editor/IDE
 # .idea/
 # .vscode/
 
-# do not ignore action file 
+# do not ignore action file
 !.github/workflows/action.yml

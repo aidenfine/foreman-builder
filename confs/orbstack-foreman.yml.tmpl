@@ -1,36 +1,30 @@
 #cloud-config
 
 runcmd:
-  # install packages
-  - dnf install -y epel-release
-  - dnf install -y git zsh curl wget htop gcc gcc-c++ make perl openssl-devel libffi-devel readline-devel zlib-devel bzip2 autoconf automake libtool patch ansible-core
-
-  # add user 
-  - useradd -m -G wheel -s /bin/bash {{ .Username }}
-
-  # give perms to file path
-  - chown -R {{ .Username }}:{{ .Username }} /home/{{ .Username }}
-
-  # Set hostname
-  - hostnamectl set-hostname foreman-dev.example.com
+  # Phase 1: user/hostname setup (background) while packages install (foreground) ===
   - |
-    cat > /etc/hosts <<EOF
+    (
+      useradd -m -G wheel -s /bin/bash {{ .Username }}
+      chown -R {{ .Username }}:{{ .Username }} /home/{{ .Username }}
+      echo "{{ .Username }} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/{{ .Username }}
+      hostnamectl set-hostname foreman-dev.example.com
+      cat > /etc/hosts <<HOSTS
     127.0.0.1 foreman-dev.example.com foreman-dev localhost localhost.localdomain
     ::1       foreman-dev.example.com foreman-dev localhost localhost.localdomain
-    EOF
+    HOSTS
+    ) &
 
-  # Passwordless sudo for {{ .Username }}
-  - echo "{{ .Username }} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/{{ .Username }}
+    dnf install -y epel-release
+    dnf install -y --enablerepo=crb \
+      git zsh curl wget htop gcc gcc-c++ make perl \
+      openssl-devel libffi-devel readline-devel zlib-devel bzip2 \
+      autoconf automake libtool patch ansible-core libyaml-devel
+    dnf module enable nodejs:22 -y
+    dnf install -y nodejs
 
-  # Enable EPEL + CRB repos, install libyaml-devel
-  - dnf install -y --enablerepo=crb libyaml-devel
+    wait
 
-  # Install Node.js 22
-  - dnf module enable nodejs:22 -y
-  - dnf install -y nodejs
-
-  # Install rbenv + Ruby 3.1.6 
-  - echo "installing ruby"
+  #Phase 2: Ruby compile + forklift clone in parallel
   - |
     sudo -u {{ .Username }} bash -c '
     git clone https://github.com/rbenv/rbenv.git ~/.rbenv
@@ -41,15 +35,20 @@ runcmd:
     eval "$(rbenv init -)"
     rbenv install 3.1.6
     rbenv global 3.1.6
-    '
+    ' &
 
-  # Clone forklift and run katello-devel playbook
-  - echo "cloning forklift and running playbook"
-  - |
     sudo -u {{ .Username }} bash -lc '
     git clone https://github.com/theforeman/forklift.git ~/forklift
     cd ~/forklift
     ansible-galaxy collection install community.general theforeman.operations
+    ' &
+
+    wait
+
+  # Phase 3: sequential steps that depend on everything above
+  - |
+    sudo -u {{ .Username }} bash -lc '
+    cd ~/forklift
     ansible-playbook -i "localhost," -c local \
       -e foreman_repositories_environment=staging \
       -e foreman_repositories_version=nightly \
@@ -58,23 +57,13 @@ runcmd:
       playbooks/katello_devel.yml
     '
 
-
-  # create env
-  -  touch ~/foreman/.env
+  - touch /home/{{ .Username }}/foreman/.env
 
   # Fix installer answers (vagrant -> {{ .Username }}) and re-run
   - |
     sed -i 's|/home/vagrant|/home/{{ .Username }}|g; s|user: vagrant|user: {{ .Username }}|g; s|group: vagrant|group: {{ .Username }}|g' /etc/foreman-installer/scenarios.d/katello-devel-answers.yaml
   - foreman-installer --scenario katello-devel -v --no-colors
 
-  #rbenv to profile
-  - echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.profile
-  - echo 'eval "$(rbenv init -)"' >> ~/.profiles
-
-  #source
-  - source ~/.bashrc
-  - source ~/.profile
-  
 write_files:
   - path: /home/{{ .Username }}/.bashrc.d/custom.sh
     owner: {{ .Username }}:{{ .Username }}
@@ -82,4 +71,3 @@ write_files:
       export PATH="$HOME/.rbenv/bin:$PATH"
       eval "$(rbenv init -)"
       alias ll="ls -la"
-

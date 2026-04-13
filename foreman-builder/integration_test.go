@@ -135,6 +135,19 @@ func TestContainerLifecycle(t *testing.T) {
 			})
 		}
 	})
+	t.Run("foreman_repos_exist", func(t *testing.T) {
+		repoList := []string{"foreman", "katello", "foreman-certs", "foreman_remote_execution"}
+
+		for _, repo := range repoList{
+			out, err := sshRun(t, containerName, "root", fmt.Sprintf("test -d %s && echo exists",  repo))
+			if err != nil {
+				t.Fatalf("folder not found: %v, output: %s",err, out)
+			}
+			if out != "exists"{
+				t.Errorf("expected %s to exist, got %q", repo,out);
+			}
+		}
+	});
 
 	t.Run("config_packages", func(t *testing.T) {
 		for _, pkg := range []string{"tmux", "tree"} {
