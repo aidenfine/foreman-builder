@@ -133,7 +133,6 @@ func (u User) createOrbstackContainer(opts foremanbuilder.OrbOptions) error {
 }
 
 // pull down container
-
 func(u User) createOrbstackContainerFromPreBuilt(opts foremanbuilder.OrbOptions) error {
 	// download image hide ip later
 	tarPath := filepath.Join(u.dotFilePath, tarFile)
@@ -156,6 +155,13 @@ func(u User) createOrbstackContainerFromPreBuilt(opts foremanbuilder.OrbOptions)
 	if err := cmd.Run(); err != nil {
 		foremanbuilder.Logger.Errorf("Error importing container: %s", err)
 		os.Remove(tarPath)
+		return err
+	}
+	startCmd := exec.Command("orb", "start", opts.ContainerName)
+	startCmd.Stdout = os.Stdout
+	startCmd.Stderr = os.Stderr
+	if err := startCmd.Run(); err != nil {
+		foremanbuilder.Logger.Errorf("Error starting container: %s", err)
 		return err
 	}
 	fmt.Println("Container has been created!")
