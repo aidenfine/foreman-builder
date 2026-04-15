@@ -62,7 +62,7 @@ func waitForCloudInit(t *testing.T, container string) {
 	t.Fatal("cloud-init did not complete within 45 minutes")
 }
 
-func TestContainerLifecycle(t *testing.T) {
+func TestImageLifecycle(t *testing.T) {
 	if !foremanbuilder.IsOrbStackRunning() {
 		t.Skip("OrbStack is not running, skipping integration test")
 	}
