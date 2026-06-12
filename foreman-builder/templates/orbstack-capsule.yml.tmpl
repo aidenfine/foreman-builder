@@ -1,0 +1,67 @@
+#cloud-config
+
+runcmd:
+  - dnf install -y epel-release
+  - dnf install -y git zsh curl wget htop
+
+  {{ if .InstallString }}- dnf install -y {{ .InstallString }}{{ end }}
+
+  - useradd -m -G wheel -s /bin/bash {{ .Username }}
+  - chown -R {{ .Username }}:{{ .Username }} /home/{{ .Username }}
+
+  - hostnamectl set-hostname {{ .CapsuleFQDN }}
+  - |
+    cat > /etc/hosts <<EOF
+    127.0.0.1 {{ .CapsuleFQDN }} {{ .ContainerName }} localhost localhost.localdomain
+    ::1       {{ .CapsuleFQDN }} {{ .ContainerName }} localhost localhost.localdomain
+    EOF
+
+  - echo "{{ .Username }} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/{{ .Username }}
+
+  # Configure Foreman/Katello repos
+  - |
+    cat > /etc/yum.repos.d/foreman.repo <<EOF
+    [foreman-staging]
+    name=Foreman nightly Staging Repository
+    baseurl=https://stagingyum.theforeman.org/foreman/nightly/el9/x86_64/
+    gpgcheck=0
+    enabled=1
+
+    [foreman-plugins-staging]
+    name=Foreman nightly Plugins Staging Repository
+    baseurl=https://stagingyum.theforeman.org/plugins/nightly/el9/x86_64/
+    gpgcheck=0
+    enabled=1
+    EOF
+  - |
+    cat > /etc/yum.repos.d/katello.repo <<EOF
+    [katello-staging]
+    name=Katello nightly Staging Repository
+    baseurl=https://stagingyum.theforeman.org/katello/nightly/el9/x86_64/
+    gpgcheck=0
+    enabled=1
+    EOF
+  - |
+    cat > /etc/yum.repos.d/pulpcore.repo <<EOF
+    [pulpcore-repository]
+    name=Pulpcore nightly
+    baseurl=https://yum.theforeman.org/pulpcore/nightly/el9/x86_64/
+    gpgcheck=0
+    enabled=1
+    EOF
+  - |
+    cat > /etc/yum.repos.d/puppet.repo <<EOF
+    [puppet8]
+    name=Puppet 8 Repository el 9 - \$basearch
+    baseurl=http://yum.puppet.com/puppet8/el/9/\$basearch
+    enabled=1
+    gpgcheck=0
+    EOF
+
+  - dnf install -y foreman-installer-katello
+
+write_files:
+  - path: /home/{{ .Username }}/.bashrc.d/custom.sh
+    owner: {{ .Username }}:{{ .Username }}
+    content: |
+      alias ll="ls -la"

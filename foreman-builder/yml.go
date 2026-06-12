@@ -13,10 +13,22 @@ import (
 //go:embed templates/orbstack-foreman.yml.tmpl
 var containerConfigTmpl string
 
+//go:embed templates/orbstack-capsule.yml.tmpl
+var capsuleConfigTmpl string
+
 type OrbstackConfigData struct {
 	Username      string
 	Packages      []string
 	InstallString string
+}
+
+type CapsuleConfigData struct {
+	Username      string
+	Packages      []string
+	InstallString string
+	CapsuleFQDN   string
+	ParentFQDN    string
+	ContainerName string
 }
 
 type Config struct {
@@ -44,6 +56,25 @@ func GetYmlValues(path string) (Config, error) {
 
 func GenerateContainerConfig(data OrbstackConfigData, pathName string) error {
 	tmpl, err := template.New("orbstack-foreman").Parse(containerConfigTmpl)
+	if err != nil {
+		return err
+	}
+
+	if len(data.Packages) != 0 {
+		installStr := MakeInstallStringFromStruct(data.Packages)
+		Logger.Debugf("install string: %s", installStr)
+		data.InstallString = installStr
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return err
+	}
+	return os.WriteFile(pathName, buf.Bytes(), 0644)
+}
+
+func GenerateCapsuleConfig(data CapsuleConfigData, pathName string) error {
+	tmpl, err := template.New("orbstack-capsule").Parse(capsuleConfigTmpl)
 	if err != nil {
 		return err
 	}

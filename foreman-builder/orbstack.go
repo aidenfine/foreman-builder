@@ -16,15 +16,22 @@ type OrbInstance struct {
 	IP      string `json:"ip"`
 }
 
-type ContainerInfoStruct struct {
+type ContainerInfoRecord struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	State string `json:"state"`
 }
 
+type ContainerInfoStruct struct {
+	Record ContainerInfoRecord `json:"record"`
+}
+
 type OrbOptions struct {
 	ContainerName string `json:"containerName"`
 	Username      string `json:"username"`
+	ParentName    string `json:"parentName,omitempty"`
+	CapsuleFQDN   string `json:"capsuleFQDN,omitempty"`
+	ParentFQDN    string `json:"parentFQDN,omitempty"`
 }
 
 var execCommand = exec.Command
