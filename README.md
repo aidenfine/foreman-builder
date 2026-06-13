@@ -35,6 +35,3 @@ Delete a container via name. Note you only be allowed to delete containers creat
 ```bash
 foreman-builder delete <container-name>
 ```
-
-
-
