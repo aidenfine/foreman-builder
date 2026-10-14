@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
+
 	foremanbuilder "github.com/aidenfine/foreman-builder/foreman-builder"
 	"github.com/spf13/cobra"
 )
@@ -15,16 +17,27 @@ var listCmd = &cobra.Command{
 	},
 }
 
-func(u User) runList() {
+func (u User) runList() {
 	fmt.Println("Foreman containers:")
 	containersPath := u.containersPath
-	containers, err := foremanbuilder.GetAllLines(containersPath, "::")
+	lines, err := foremanbuilder.GetAllLines(containersPath, "")
 	if err != nil {
 		fmt.Printf("Error getting all containers %v\n", err)
+		return
 	}
 
-	// i - 1 due to the empty line present at the end
-	for i := 0; i < len(containers)-1; i++ {
-		fmt.Printf("- %s\n", containers[i])
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "::")
+		name := parts[0]
+
+		if len(parts) >= 4 && parts[2] == "capsule" {
+			fmt.Printf("- %s (capsule -> %s)\n", name, parts[3])
+		} else {
+			fmt.Printf("- %s (server)\n", name)
+		}
 	}
 }

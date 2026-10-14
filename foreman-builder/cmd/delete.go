@@ -52,7 +52,7 @@ func (u User) runDelete(containerName string) {
 		}
 
 	}
-	if containerInfo.State == "running" {
+	if containerInfo.Record.State == "running" {
 		var input string
 		for input != "y" && input != "n" {
 			fmt.Println("Container is currently running! \n Do you want to stop the container and delete? \n [y/n]")
